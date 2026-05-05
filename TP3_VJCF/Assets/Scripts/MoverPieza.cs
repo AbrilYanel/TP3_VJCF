@@ -6,7 +6,13 @@ public class MoverPieza : MonoBehaviour
     private float zCoord;
     private bool puedeMover = true;
     private Camera camaraActual;
+    private ControladorUI ui;
 
+
+    private void Start()
+    {
+        ui = Object.FindFirstObjectByType<ControladorUI>();
+    }
     void OnMouseDown()
     {
         if (!puedeMover) return;
@@ -17,8 +23,16 @@ public class MoverPieza : MonoBehaviour
 
         zCoord = camaraActual.WorldToScreenPoint(gameObject.transform.position).z;
         offset = gameObject.transform.position - GetMouseWorldPos();
+
+
+        PiezaCasette pieza = GetComponent<PiezaCasette>();
+        if (ui != null) ui.MostrarInfo(pieza.nombrePieza, pieza.integridad);
     }
 
+    private void OnMouseUp()
+    {
+        if (ui != null) ui.OcultarInfo();
+    }
     private Vector3 GetMouseWorldPos()
     {
         Vector3 mousePoint = Input.mousePosition;

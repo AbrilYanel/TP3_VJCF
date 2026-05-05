@@ -40,7 +40,7 @@ public class GestorEmociones : MonoBehaviour
                 emocionActual = EstadoEmocional.Tristeza;    // Azules y Violetas
         }
 
-        Debug.Log($"Color: {matiz}° | Sat: {s} | Brillo: {v} | Estado: {emocionActual}");
+       
     }
 
     // Método simple para convertir el número de registro a color de Unity

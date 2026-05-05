@@ -2,8 +2,13 @@ using UnityEngine;
 
 public class PiezaCasette : MonoBehaviour
 {
-    public Transform objetivo; // Arrastra aquí la pieza correspondiente del grupo "Ordenado"
+    public Transform objetivo;
     public float distanciaParaEncajar = 0.5f;
+
+    [Header("Estado de la Pieza")]
+    public string nombrePieza;
+    public float integridad = 100f; 
+    public bool rota = false;
 
     [Header("Configuración de Emoción")]
     public bool esFragil;
@@ -11,20 +16,18 @@ public class PiezaCasette : MonoBehaviour
 
     private GestorEmociones gestor;
     private bool encajada = false;
-
+    private PuzzleManager puzzleManager;
     void Start()
     {
         gestor = Object.FindFirstObjectByType<GestorEmociones>();
-        // Ocultamos el objetivo para que no se vea la pieza "fantasma" todavía
-        if (objetivo != null) objetivo.gameObject.SetActive(false);
+        puzzleManager = Object.FindFirstObjectByType<PuzzleManager>();
     }
 
-    void OnMouseUp() // Cuando el jugador suelta la pieza
+    void OnMouseUp()
     {
-        if (encajada) return;
+        if (encajada || rota) return;
 
         float distancia = Vector3.Distance(transform.position, objetivo.position);
-
         if (distancia < distanciaParaEncajar)
         {
             ComprobarEncaje();
@@ -35,35 +38,56 @@ public class PiezaCasette : MonoBehaviour
     {
         EstadoEmocional emocion = gestor.emocionActual;
 
+        
         if (esFragil && emocion == EstadoEmocional.Enojo)
         {
-            Debug.Log("¡CRACK! Rompiste la pieza por estar enojado.");
-            this.enabled = false; // Desactiva el script, la pieza queda "muerta"
-            // Aquí podrías cambiar el color a negro o destruirla
+            RecibirDanio(40f, "¡Demasiada fuerza! La pieza se está agrietando.");
         }
+        
         else if (requiereFuerza && emocion != EstadoEmocional.Enojo)
         {
-            Debug.Log("Esta pieza está muy dura, necesitas más fuerza.");
+            RecibirDanio(20f, "La pieza no encaja y se desgasta al forzarla.");
         }
-        else if (esFragil && emocion != EstadoEmocional.Relajado)
-        {
-            Debug.Log("Necesitas estar más Relajado para manipular esta pieza con cuidado.");
-        }
+        
         else
         {
-            // Si pasa los filtros, se encaja
             Encajar();
         }
     }
 
-    void Encajar()
+    void RecibirDanio(float cantidad, string mensaje)
+    {
+        integridad -= cantidad;
+        Debug.Log(mensaje + " Integridad: " + integridad + "%");
+
+        if (integridad <= 0)
+        {
+            Debug.Log("PIEZA ROTA: Puzzle Perdido.");
+
+            if (integridad <= 0 && !rota)
+            {
+                RomperObjeto();
+            }
+        }
+    }
+
+    void RomperObjeto()
+    {
+        integridad = 0;
+        rota = true;
+        GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<Collider>().enabled = false;
+        puzzleManager.RegistrarPiezaTerminada(false);
+    }
+
+
+        void Encajar()
     {
         encajada = true;
         transform.position = objetivo.position;
         transform.rotation = objetivo.rotation;
-
-        // Bloqueamos el movimiento para que no se pueda volver a mover
+        if (GetComponent<Rigidbody>()) GetComponent<Rigidbody>().isKinematic = true;
         GetComponent<MoverPieza>().BloquearMovimiento();
-        Debug.Log("Pieza encajada correctamente.");
+        puzzleManager.RegistrarPiezaTerminada(true);
     }
 }

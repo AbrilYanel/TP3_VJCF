@@ -42,12 +42,13 @@ public class ActivadorPuzzle : MonoBehaviour
     public void SalirDeModoPuzzle()
     {
         enPuzzle = false;
-        camaraPrincipal.enabled = true;
-        camaraMesa.enabled = false;
+        camaraPrincipal.gameObject.SetActive(true);
+        camaraMesa.gameObject.SetActive(false);
         piezasPuzzle.SetActive(false);
         if (playerMovement != null) playerMovement.enabled = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-      
     }
 
     // Detectar cuando el jugador entra al rango
