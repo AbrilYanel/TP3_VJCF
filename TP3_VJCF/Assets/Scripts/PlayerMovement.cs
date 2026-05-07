@@ -7,9 +7,9 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed = 5f;
     public float runSpeed = 10f;
 
-
     private CharacterController controller;
     private Vector3 moveDirection;
+    public bool bloqueado = false; // Nuevo
 
     void Start()
     {
@@ -18,13 +18,13 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (bloqueado) return; // Si está bloqueado no procesa input
 
-        float x = Input.GetAxis("Horizontal"); // A/D
-        float z = Input.GetAxis("Vertical");   // W/S
+        float x = Input.GetAxisRaw("Horizontal"); // Raw elimina la inercia
+        float z = Input.GetAxisRaw("Vertical");
 
         Vector3 move = transform.right * x + transform.forward * z;
 
-        // Detectar si corre
         float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
 
         controller.Move(move * speed * Time.deltaTime);

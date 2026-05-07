@@ -8,31 +8,45 @@ public class MoverPieza : MonoBehaviour
     private Camera camaraActual;
     private ControladorUI ui;
 
-
     private void Start()
     {
-        ui = Object.FindFirstObjectByType<ControladorUI>();
+        // Tomamos la UI del GameManager centralizado
+        ui = GameManager.Instance.controladorUI;
     }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            GestorEmociones gestor = Object.FindFirstObjectByType<GestorEmociones>();
+            PiezaCasette pieza = GetComponent<PiezaCasette>();
+
+            if (gestor != null && gestor.emocionActual == EstadoEmocional.Desagrado && pieza.estaSucia)
+            {
+                Object.FindFirstObjectByType<ActivadorPuzzle>().SalirParaLavar(this.gameObject);
+            }
+        }
+    }
+
     void OnMouseDown()
     {
         if (!puedeMover) return;
 
-        // Buscamos cualquier cámara que esté encendida en la escena ahora mismo
-        camaraActual = Camera.main;
-        if (camaraActual == null) camaraActual = FindObjectOfType<Camera>();
+        // CRÍTICO: Usamos la cámara de la mesa para el cálculo del mouse
+        camaraActual = GameManager.Instance.camaraMesa;
 
         zCoord = camaraActual.WorldToScreenPoint(gameObject.transform.position).z;
         offset = gameObject.transform.position - GetMouseWorldPos();
 
-
         PiezaCasette pieza = GetComponent<PiezaCasette>();
-        if (ui != null) ui.MostrarInfo(pieza.nombrePieza, pieza.integridad);
+        if (ui != null && pieza != null) ui.MostrarInfo(pieza.nombrePieza, pieza.integridad);
     }
 
     private void OnMouseUp()
     {
         if (ui != null) ui.OcultarInfo();
     }
+
     private Vector3 GetMouseWorldPos()
     {
         Vector3 mousePoint = Input.mousePosition;

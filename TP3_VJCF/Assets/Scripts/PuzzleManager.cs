@@ -1,58 +1,91 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI; 
+using UnityEngine.UI;
 using TMPro;
+
 public class PuzzleManager : MonoBehaviour
 {
     public int totalPiezas;
-    private int piezasProcesadas = 0; 
+    private int piezasProcesadas = 0;
     private int piezasEncajadasExitosamente = 0;
 
-    public GameObject botonFinalizar; 
-    public TextMeshProUGUI textoPuntaje;
-    public ActivadorPuzzle activador;
+    [HideInInspector] public GameObject botonFinalizar;
+    [HideInInspector] public TextMeshProUGUI textoPuntaje;
+     public ActivadorPuzzle activador;
+
+    // ObjetoAgarrable ahora se auto-asigna al propio objeto padre
+    [HideInInspector] public GameObject objetoAgarrable;
+
+    public int puntajeObtenido;
 
     void Start()
     {
-        botonFinalizar.SetActive(false);
+        activador = GetComponentInParent<ActivadorPuzzle>();
+        if (activador == null)
+            activador = Object.FindFirstObjectByType<ActivadorPuzzle>();
+
+        if (activador == null)
+            Debug.LogError("PuzzleManager no encontró ningún ActivadorPuzzle en la escena.");
+        objetoAgarrable = this.gameObject;
+
+        
+        GameObject botonObj = GameObject.Find("BotonFinalizar");
+
+        if (botonObj != null)
+        {
+            botonFinalizar = botonObj;
+
+            // Obtenemos el componente Button
+            Button btn = botonFinalizar.GetComponent<Button>();
+
+            // Limpiamos funciones viejas (del puzzle anterior) y asignamos la nueva
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(FinalizarPuzzle);
+
+            // Nos aseguramos de que empiece apagado
+            botonFinalizar.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Error de Arquitectura: No se encontró un objeto llamado BotonFinalizar en la escena.");
+        }
     }
 
-    // Este método lo llamará cada pieza al terminar su ciclo
     public void RegistrarPiezaTerminada(bool fueExito)
     {
         piezasProcesadas++;
         if (fueExito) piezasEncajadasExitosamente++;
 
-        // Si ya no quedan piezas sueltas en la mesa
         if (piezasProcesadas >= totalPiezas)
         {
-            MostrarBotonFinalizar();
+            botonFinalizar.SetActive(true);
         }
-    }
-
-    void MostrarBotonFinalizar()
-    {
-        botonFinalizar.SetActive(true);
     }
 
     public void FinalizarPuzzle()
     {
-        // Cálculo de puntaje 
-        int puntajeFinal = piezasEncajadasExitosamente * 25;
-        textoPuntaje.text = "Puntaje: " + puntajeFinal;
+        puntajeObtenido = piezasEncajadasExitosamente * 25;
+        activador.SalirDeModoPuzzle();
+        activador.DeshabilitarArea();
 
-        Debug.Log("Saliendo del puzzle...");
-
-        
-        if (activador != null)
+        if (objetoAgarrable != null)
         {
-            activador.SalirDeModoPuzzle();
+            Collider[] collidersHijos = objetoAgarrable.GetComponentsInChildren<Collider>();
+            foreach (var c in collidersHijos)
+            {
+                if (c.gameObject != objetoAgarrable) c.enabled = false;
+            }
+
+            BoxCollider bc = objetoAgarrable.GetComponent<BoxCollider>();
+            if (bc == null) bc = objetoAgarrable.AddComponent<BoxCollider>();
+            bc.isTrigger = true;
+            bc.size = new Vector3(1f, 1f, 1f);
+
+            Rigidbody rb = objetoAgarrable.GetComponent<Rigidbody>();
+            if (rb == null) rb = objetoAgarrable.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+
+            ObjetoAgarrable recogible = objetoAgarrable.AddComponent<ObjetoAgarrable>();
+            recogible.Configurar(this);
         }
-
-        
-        botonFinalizar.SetActive(false);
-
     }
-
 }

@@ -9,6 +9,9 @@ public class PiezaCasette : MonoBehaviour
     public string nombrePieza;
     public float integridad = 100f; 
     public bool rota = false;
+    public bool estaSucia;
+    public bool haSidoLavada = false;
+
 
     [Header("Configuración de Emoción")]
     public bool esFragil;
@@ -21,6 +24,7 @@ public class PiezaCasette : MonoBehaviour
     {
         gestor = Object.FindFirstObjectByType<GestorEmociones>();
         puzzleManager = Object.FindFirstObjectByType<PuzzleManager>();
+
     }
 
     void OnMouseUp()
@@ -43,7 +47,13 @@ public class PiezaCasette : MonoBehaviour
         {
             RecibirDanio(40f, "¡Demasiada fuerza! La pieza se está agrietando.");
         }
-        
+
+        if (estaSucia && !haSidoLavada)
+        {
+            Debug.Log("La pieza está demasiado sucia para encajarla. ¡Qué asco!");
+            return; // No permite encajar
+        }
+
         else if (requiereFuerza && emocion != EstadoEmocional.Enojo)
         {
             RecibirDanio(20f, "La pieza no encaja y se desgasta al forzarla.");
